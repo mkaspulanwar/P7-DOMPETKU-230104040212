@@ -41,12 +41,6 @@ val dummyAssets = listOf(
     Asset("Bitcoin", "BTC", "Rp 980.000.000", "0.012 BTC", Icons.Default.CurrencyBitcoin, Color(0xFFF9A825)),
     Asset("Uang Kas", "IDR", "Rp 5.000.000", "1 Unit", Icons.Default.AttachMoney, Color(0xFF1E88E5)),
     Asset("Bank Central Asia, Tbk", "BBCA", "Rp 9.250", "100 Lembar", Icons.Default.TrendingDown, Color(0xFFD50000)),
-    Asset("Emas Antam", "ANTM", "Rp 1.300.000", "2 Gram", Icons.Default.Diamond, Color(0xFFFFB300)),
-    Asset("Ethereum", "ETH", "Rp 50.000.000", "0.5 ETH", Icons.Default.CurrencyExchange, Color(0xFF4DB6AC)),
-    Asset("Ethereum", "ETH", "Rp 50.000.000", "0.5 ETH", Icons.Default.CurrencyExchange, Color(0xFF4DB6AC)),
-    Asset("Ethereum", "ETH", "Rp 50.000.000", "0.5 ETH", Icons.Default.CurrencyExchange, Color(0xFF4DB6AC)),
-    Asset("Ethereum", "ETH", "Rp 50.000.000", "0.5 ETH", Icons.Default.CurrencyExchange, Color(0xFF4DB6AC)),
-    Asset("Ethereum", "ETH", "Rp 50.000.000", "0.5 ETH", Icons.Default.CurrencyExchange, Color(0xFF4DB6AC)),
 )
 // ----------------------------------------------------
 // 2. Composable Screen Utama
@@ -103,7 +97,7 @@ fun HomeScreen(navController: NavController) {
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "Rp 1.036.000.000", // Revisi Nilai & Mata Uang
+                            text = "Rp 4.250.000", // Revisi Nilai & Mata Uang
                             style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold),
                             color = MaterialTheme.colorScheme.primary
                         )
