@@ -23,7 +23,7 @@ private val LightColorScheme = lightColorScheme(
     surface = SurfaceLight,
     onBackground = OnBackgroundLight,
     error = ErrorLight
-    // ... definisikan semua warna MD3 lainnya
+    // ... definisikan semua warna MD3 lainnya (anda mungkin perlu mendefinisikan PrimaryLight, dll. di Color.kt)
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -43,8 +43,7 @@ private val DarkColorScheme = darkColorScheme(
 // 2. Composable Theme utama
 @Composable
 fun DompetkuTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(), // Menggunakan setting sistem [cite: 17]
-    // Dynamic color is available on Android 12+ [cite: 16]
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -57,21 +56,32 @@ fun DompetkuTheme(
         else -> LightColorScheme
     }
 
-    // Mengubah warna status bar
+    // Mengubah warna system bar
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+
+            // Mengatur warna Status Bar
             window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+
+            // *** FIX 3: Mengatur warna Navigation Bar (Bar bawah) agar sesuai background tema ***
+            window.navigationBarColor = colorScheme.background.toArgb()
+
+            // Mengatur Appearance (ikon) pada System Bar
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = !darkTheme
+
+            // *** FIX 4: Mengatur Appearance (ikon) pada Navigation Bar agar sesuai tema ***
+            controller.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
     // 3. Terapkan Theme
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography, // Akan kita buat di Type.kt
-        shapes = AppShapes,      // Akan kita buat di Shape.kt
+        typography = Typography, // Asumsi ini diimpor dari Type.kt
+        shapes = AppShapes,      // Asumsi ini diimpor dari Shape.kt
         content = content
     )
 }

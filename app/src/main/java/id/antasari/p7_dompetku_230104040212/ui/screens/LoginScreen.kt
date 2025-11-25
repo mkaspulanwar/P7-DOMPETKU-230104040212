@@ -19,7 +19,7 @@ import id.antasari.p7_dompetku_230104040212.ui.components.PrimaryButton
 fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
-    var email by remember { mutableStateOf("user@example.com") }
+    var email by remember { mutableStateOf("mkaspulanwar@gmail.com") }
     var password by remember { mutableStateOf("password123") }
     val isLoginEnabled = email.isNotEmpty() && password.length >= 6
 

@@ -1,6 +1,6 @@
 package id.antasari.p7_dompetku_230104040212.ui.screens
 
-import androidx.compose.foundation.Image // Import untuk komponen Image
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,15 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale // Import untuk ContentScale.Crop
-import androidx.compose.ui.res.painterResource // Import untuk painterResource
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-
-// Import R untuk mengakses drawable (pastikan package name sesuai)
 import id.antasari.p7_dompetku_230104040212.R
 import id.antasari.p7_dompetku_230104040212.navigation.Destinations
 import id.antasari.p7_dompetku_230104040212.ui.components.AppCard
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.SolidColor // Import untuk SolidColor
 
 // Anotasi ini menghilangkan warning 'experimental API' pada CenterAlignedTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +30,7 @@ fun ProfileScreen(navController: NavController) {
             ProfileTopAppBar(navController)
         },
         bottomBar = {
+            // Asumsi AppBottomBar tersedia (didefinisikan di HomeScreen atau diimpor)
             AppBottomBar(
                 navController = navController,
                 currentRoute = Destinations.PROFILE_ROUTE
@@ -40,85 +41,138 @@ fun ProfileScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // --- BAGIAN REVISI: FOTO PROFIL (profile.png) ---
+            // --- 1. HEADER PROFIL ---
+            Spacer(modifier = Modifier.height(16.dp))
             Surface(
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.size(120.dp),
             ) {
-                // Menampilkan gambar dari res/drawable/profile.png
                 Image(
                     painter = painterResource(id = R.drawable.profile),
                     contentDescription = "Foto Profil M. Kaspul Anwar",
-                    contentScale = ContentScale.Crop, // Memastikan gambar terpotong rapi dalam lingkaran
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- BAGIAN REVISI: NAMA PENGGUNA ---
             Text(
                 text = "M. Kaspul Anwar",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(4.dp))
 
-            // --- BAGIAN REVISI: EMAIL ---
             Text(
                 text = "mkaspulanwar@gmail.com",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Daftar Aksi/Informasi Profil menggunakan AppCard
-            AppCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    ProfileItem(Icons.Default.Edit, "Edit Profil") { /* Aksi Edit */ }
-                    Divider()
-                    ProfileItem(Icons.Default.AttachMoney, "Riwayat Transaksi") { /* Aksi Riwayat */ }
-                    Divider()
-                    // Item Logout
-                    ProfileItem(Icons.Default.Logout, "Logout", MaterialTheme.colorScheme.error) {
-                        navController.navigate(Destinations.LOGIN_ROUTE) {
-                            popUpTo(Destinations.HOME_ROUTE) { inclusive = true }
-                        }
+            // --- 2. KELOMPOK MENU AKSI (EDIT & RIWAYAT) ---
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Item 1: Edit Profil
+                ModernProfileButton(
+                    icon = Icons.Default.Edit,
+                    text = "Edit Profil",
+                    onClick = { /* Aksi Edit Profil */ }
+                )
+
+                // Item 2: Riwayat Transaksi
+                ModernProfileButton(
+                    icon = Icons.Default.History,
+                    text = "Riwayat Transaksi",
+                    onClick = { /* Aksi Riwayat Transaksi */ }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f)) // Mengambil ruang sisa
+
+            // --- 3. TOMBOL LOGOUT TERPISAH DI BAWAH ---
+            OutlinedButton(
+                onClick = {
+                    navController.navigate(Destinations.LOGIN_ROUTE) {
+                        popUpTo(Destinations.HOME_ROUTE) { inclusive = true }
                     }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                ),
+                // *** PERBAIKAN: Menggunakan SolidColor untuk Brush ***
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = SolidColor(MaterialTheme.colorScheme.error)
+                )
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Logout, contentDescription = "Logout")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Logout", style = MaterialTheme.typography.titleMedium)
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-// Komponen Reusable untuk item di dalam Card Profil
+// ----------------------------------------------------
+// KOMPONEN BARU: ModernProfileButton
+// ----------------------------------------------------
 @Composable
-fun ProfileItem(
+fun ModernProfileButton(
     icon: ImageVector,
     text: String,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    ListItem(
-        headlineContent = { Text(text, style = MaterialTheme.typography.bodyLarge) },
-        leadingContent = {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 icon,
                 contentDescription = text,
-                tint = contentColor
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
             )
-        },
-        modifier = Modifier
-            .heightIn(min = 56.dp)
-            .clickable { onClick() }
-    )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
 }
 
-// TopAppBar khusus Profil
+// ----------------------------------------------------
+// KOMPONEN LAMA: ProfileTopAppBar & AppBottomBar (Dibiarkan)
+// ----------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopAppBar(navController: NavController) {
@@ -134,3 +188,4 @@ fun ProfileTopAppBar(navController: NavController) {
         )
     )
 }
+// Catatan: Pastikan AppBottomBar juga tersedia/diimpor di sini.

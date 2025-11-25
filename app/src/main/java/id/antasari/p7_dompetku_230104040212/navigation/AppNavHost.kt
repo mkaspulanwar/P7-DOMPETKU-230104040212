@@ -10,6 +10,9 @@ import id.antasari.p7_dompetku_230104040212.ui.screens.HomeScreen
 import id.antasari.p7_dompetku_230104040212.ui.screens.LoginScreen
 import id.antasari.p7_dompetku_230104040212.ui.screens.ProfileScreen
 import id.antasari.p7_dompetku_230104040212.ui.screens.SettingsScreen
+import androidx.compose.animation.EnterTransition // Import yang diperlukan
+import androidx.compose.animation.ExitTransition // Import yang diperlukan
+// androidx.compose.animation.core.tween tidak lagi diperlukan, tetapi tidak menyebabkan error
 
 // Definisikan rute (screen) Anda
 object Destinations {
@@ -23,38 +26,52 @@ object Destinations {
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Destinations.LOGIN_ROUTE, // Mulai dari Login
-    // Parameter BARU untuk kontrol tema:
+    startDestination: String = Destinations.LOGIN_ROUTE,
     toggleTheme: () -> Unit,
     isDarkTheme: Boolean
 ) {
+    // transitionDuration tidak lagi digunakan
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
+        // --- LOGIN ROUTE (Tanpa Transisi) ---
         composable(Destinations.LOGIN_ROUTE) {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate(Destinations.HOME_ROUTE) {
-                        // Mencegah kembali ke Login setelah sukses
                         popUpTo(Destinations.LOGIN_ROUTE) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Destinations.HOME_ROUTE) {
+        // --- HOME ROUTE (Animasi Dihapus) ---
+        composable(
+            Destinations.HOME_ROUTE,
+            enterTransition = { EnterTransition.None }, // Transisi masuk instan
+            exitTransition = { ExitTransition.None }   // Transisi keluar instan
+        ) {
             HomeScreen(navController = navController)
         }
 
-        composable(Destinations.PROFILE_ROUTE) {
-            // ProfileScreen tidak membutuhkan toggleTheme, tapi membutuhkan navController
+        // --- PROFILE ROUTE (Animasi Dihapus) ---
+        composable(
+            Destinations.PROFILE_ROUTE,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None }
+        ) {
             ProfileScreen(navController = navController)
         }
 
-        composable(Destinations.SETTINGS_ROUTE) {
-            // Meneruskan parameter toggleTheme dan isDarkTheme ke SettingsScreen
+        // --- SETTINGS ROUTE (Animasi Dihapus) ---
+        composable(
+            Destinations.SETTINGS_ROUTE,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None }
+        ) {
             SettingsScreen(
                 navController = navController,
                 toggleTheme = toggleTheme,
