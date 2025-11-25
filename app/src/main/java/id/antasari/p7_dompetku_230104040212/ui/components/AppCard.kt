@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
+// Import yang tidak dipakai bisa dihapus untuk kerapihan, tapi saya biarkan untuk kompatibilitas.
 import androidx.compose.material.icons.filled.CurrencyBitcoin
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.TrendingDown
@@ -17,7 +18,7 @@ import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.CurrencyExchange
 
 // =========================================================
-// 1. Komponen AppCard (Card Total Portofolio)
+// 1. Komponen AppCard (Card Total Portofolio) - TIDAK BERUBAH
 // =========================================================
 @Composable
 fun AppCard(
@@ -44,13 +45,13 @@ fun AppCard(
 }
 
 // =========================================================
-// 2. Komponen PortfolioItem (Item dalam Daftar Aset)
+// 2. Komponen PortfolioItem (Item dalam Daftar Aset) - PERBAIKAN DITERAPKAN
 // =========================================================
 @Composable
 fun PortfolioItem(
     icon: @Composable () -> Unit,
-    name: String,
     ticker: String,
+    name: String,
     marketValue: String,
     quantity: String
 ) {
@@ -75,28 +76,33 @@ fun PortfolioItem(
 
         // 2. Nama & Ticker
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-            )
+            // *** PERBAIKAN 1: Ticker lebih besar (titleMedium/Large) ***
             Text(
                 text = ticker,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                // Font weight SemiBold untuk penekanan
+            )
+            // *** PERBAIKAN 1: Name lebih kecil (bodyMedium/labelMedium) ***
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyMedium, // BodyMedium lebih kecil dari titleMedium
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
         }
 
-        // 3. Harga dan Perubahan
+        // 3. Harga dan Kuantitas
         Column(horizontalAlignment = Alignment.End) {
+            // *** PERBAIKAN 2: Market Value TANPA bold ***
             Text(
                 text = marketValue,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.titleMedium // Hapus .copy(fontWeight = FontWeight.Bold)
             )
 
-            // Menampilkan Quantity
+            // *** PERBAIKAN 2: Quantity TANPA bold ***
             Text(
                 text = quantity,
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.labelMedium, // Hapus .copy(fontWeight = FontWeight.Bold)
                 color = MaterialTheme.colorScheme.secondary
             )
         }
