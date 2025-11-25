@@ -45,6 +45,9 @@ val dummyAssets = listOf(
     Asset("Bitcoin", "BTC", "Rp 1.450.000", "0.0007 BTC", R.drawable.bitcoin_logo, null),
     Asset("Uang Kas", "IDR", "Rp 500.000", "1 Unit", R.drawable.rupiah_logo, null),
     Asset("Bank Central Asia, Tbk", "BBCA", "Rp 925.000", "100 Lembar", R.drawable.bbca_logo, null),
+    Asset("Nvidia Inc", "NVDA", "Rp 130.000", "0.04 Lembar", R.drawable.nvidia_logo, null),
+    Asset("Chandra Daya Investasi Tbk", "CDIA", "Rp 750.000", "400 Lembar", R.drawable.cdia_logo, null),
+    Asset("Salim Ivomas Pratama Tbk", "SIMP", "Rp. 675.000", "1000 Lembar", R.drawable.simp_logo, null),
 )
 // ----------------------------------------------------
 // 2. Composable Screen Utama
