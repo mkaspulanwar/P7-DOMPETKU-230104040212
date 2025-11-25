@@ -51,7 +51,7 @@ fun PortfolioItem(
     icon: @Composable () -> Unit,
     name: String,
     ticker: String,
-    lastPrice: String,
+    marketValue: String,
     quantity: String
 ) {
     Row(
@@ -89,7 +89,7 @@ fun PortfolioItem(
         // 3. Harga dan Perubahan
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = lastPrice,
+                text = marketValue,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
             )
 
