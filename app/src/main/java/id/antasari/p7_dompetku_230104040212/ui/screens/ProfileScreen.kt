@@ -9,28 +9,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import id.antasari.p7_dompetku_230104040212.R
 import id.antasari.p7_dompetku_230104040212.navigation.Destinations
-import id.antasari.p7_dompetku_230104040212.ui.components.AppCard
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.SolidColor // Import untuk SolidColor
+import id.antasari.p7_dompetku_230104040212.viewmodel.AuthViewModel
 
-// Anotasi ini menghilangkan warning 'experimental API' pada CenterAlignedTopAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = viewModel() // Inject ViewModel
+) {
     Scaffold(
         topBar = {
             ProfileTopAppBar(navController)
         },
         bottomBar = {
-            // Asumsi AppBottomBar tersedia (didefinisikan di HomeScreen atau diimpor)
             AppBottomBar(
                 navController = navController,
                 currentRoute = Destinations.PROFILE_ROUTE
@@ -46,48 +47,44 @@ fun ProfileScreen(navController: NavController) {
         ) {
 
             // --- 1. HEADER PROFIL ---
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             Surface(
                 shape = MaterialTheme.shapes.extraLarge,
                 modifier = Modifier.size(120.dp),
+                shadowElevation = 8.dp
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Foto Profil M. Kaspul Anwar",
+                    contentDescription = "Foto Profil",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Text(
                 text = "M. Kaspul Anwar",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground
             )
-            Spacer(modifier = Modifier.height(4.dp))
-
             Text(
                 text = "mkaspulanwar@gmail.com",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // --- 2. KELOMPOK MENU AKSI (EDIT & RIWAYAT) ---
+            // --- 2. KELOMPOK MENU AKSI ---
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Item 1: Edit Profil
                 ModernProfileButton(
                     icon = Icons.Default.Edit,
                     text = "Edit Profil",
                     onClick = { /* Aksi Edit Profil */ }
                 )
 
-                // Item 2: Riwayat Transaksi
                 ModernProfileButton(
                     icon = Icons.Default.History,
                     text = "Riwayat Transaksi",
@@ -95,23 +92,28 @@ fun ProfileScreen(navController: NavController) {
                 )
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Mengambil ruang sisa
+            Spacer(modifier = Modifier.weight(1f))
 
-            // --- 3. TOMBOL LOGOUT TERPISAH DI BAWAH ---
+            // --- 3. TOMBOL LOGOUT DENGAN LOGIKA ---
             OutlinedButton(
                 onClick = {
+                    // 1. Hapus sesi login
+                    viewModel.logout()
+                    
+                    // 2. Navigasi ke Login & hapus backstack
                     navController.navigate(Destinations.LOGIN_ROUTE) {
-                        popUpTo(Destinations.HOME_ROUTE) { inclusive = true }
+                        popUpTo(0) { inclusive = true } // Hapus semua history
+                        launchSingleTop = true
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.error
                 ),
-                // *** PERBAIKAN: Menggunakan SolidColor untuk Brush ***
                 border = ButtonDefaults.outlinedButtonBorder.copy(
                     brush = SolidColor(MaterialTheme.colorScheme.error)
-                )
+                ),
+                shape = MaterialTheme.shapes.medium
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,
@@ -119,17 +121,14 @@ fun ProfileScreen(navController: NavController) {
                 ) {
                     Icon(Icons.Default.Logout, contentDescription = "Logout")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Logout", style = MaterialTheme.typography.titleMedium)
+                    Text("Keluar Aplikasi", style = MaterialTheme.typography.titleMedium)
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
-// ----------------------------------------------------
-// KOMPONEN BARU: ModernProfileButton
-// ----------------------------------------------------
 @Composable
 fun ModernProfileButton(
     icon: ImageVector,
@@ -139,13 +138,11 @@ fun ModernProfileButton(
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        modifier = modifier.fillMaxWidth().clickable { onClick() },
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -157,11 +154,11 @@ fun ModernProfileButton(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Normal),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium),
                 modifier = Modifier.weight(1f)
             )
             Icon(
-                Icons.Default.KeyboardArrowRight,
+                Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -169,23 +166,15 @@ fun ModernProfileButton(
     }
 }
 
-// ----------------------------------------------------
-// KOMPONEN LAMA: ProfileTopAppBar & AppBottomBar (Dibiarkan)
-// ----------------------------------------------------
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileTopAppBar(navController: NavController) {
     CenterAlignedTopAppBar(
-        title = { Text("Profil Saya", style = MaterialTheme.typography.titleLarge) },
+        title = { Text("Profil Saya", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)) },
         navigationIcon = {
             IconButton(onClick = { navController.navigate(Destinations.HOME_ROUTE) }) {
                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
             }
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background
-        )
+        }
     )
 }
-// Catatan: Pastikan AppBottomBar juga tersedia/diimpor di sini.

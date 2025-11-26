@@ -5,74 +5,89 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.* import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.ui.res.painterResource
-import androidx.annotation.DrawableRes
+import androidx.lifecycle.viewmodel.compose.viewModel
 import id.antasari.p7_dompetku_230104040212.R
-
+import id.antasari.p7_dompetku_230104040212.model.Asset
 import id.antasari.p7_dompetku_230104040212.navigation.Destinations
-import id.antasari.p7_dompetku_230104040212.ui.components.AppCard
 import id.antasari.p7_dompetku_230104040212.ui.components.PortfolioItem
+import id.antasari.p7_dompetku_230104040212.viewmodel.HomeViewModel
 
 // ----------------------------------------------------
-// 1. Data Model & Dummy Aset (Tidak Berubah)
+// 1. Data Model Quick Actions
 // ----------------------------------------------------
 
-data class Asset(
-    val ticker: String,
-    val name: String,
-    val marketValue: String,
-    val quantity: String,
-    @DrawableRes val iconResId: Int,
-    val iconTint: Color? = null
-)
-
-val dummyAssets = listOf(
-    Asset("BTC", "Bitcoin", "Rp 1.450.000", "0.0007 BTC", R.drawable.bitcoin_logo, null),
-    Asset("BBCA", "Bank Central Asia Tbk", "Rp 925.000", "100 Lembar", R.drawable.bbca_logo, null),
-    Asset("CDIA", "Chandra Daya Investasi Tbk", "Rp 750.000", "400 Lembar", R.drawable.cdia_logo, null),
-    Asset("SIMP", "Salim Ivomas Pratama Tbk", "Rp. 675.000", "1000 Lembar", R.drawable.simp_logo, null),
-    Asset("IDR", "Uang Kas", "Rp 500.000", "1 Unit", R.drawable.rupiah_logo, null),
-    Asset("NVDA", "Nvidia Inc", "Rp 130.000", "0.04 Lembar", R.drawable.nvidia_logo, null),
-)
-
-// Data Model & Dummy Quick Actions
 data class QuickAction(
     val label: String,
     val icon: ImageVector,
     val onClick: () -> Unit
 )
 
-// MODIFIKASI: Mengganti "Aktivitas" dengan "Hapus Asset"
-val portfolioActions: List<QuickAction> = listOf(
-    QuickAction("Tambah Aset", Icons.Default.AddCircle, { /* Aksi Tambah Aset */ }),
-    QuickAction("Hapus Asset", Icons.Default.RemoveCircle, { /* Aksi Hapus Asset */ }), // TELAH DIMODIFIKASI
-    QuickAction("Laporan", Icons.Default.Assessment, { /* Aksi Buat Laporan */ }),
-    QuickAction("Sinkronisasi", Icons.Default.Sync, { /* Aksi Sinkronisasi Data */ }),
-)
-
 // ----------------------------------------------------
-// 2. Composable Screen Utama (Tidak Berubah)
+// 2. Composable Screen Utama
 // ----------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    navController: NavController,
+    viewModel: HomeViewModel = viewModel()
+) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Destinations.HOME_ROUTE
 
     var balanceHidden by remember { mutableStateOf(false) }
+    
+    // Mengambil data assets dari ViewModel
+    val assets = viewModel.assets
+    
+    // Mengambil total nilai portofolio yang dihitung otomatis
+    val totalPortfolioValue = viewModel.totalPortfolioValue
+    
+    // State untuk dialog tambah aset
+    var showAddAssetDialog by remember { mutableStateOf(false) }
+
+    // Definisi Action Button di dalam composable agar bisa akses state
+    val portfolioActions = remember(assets) {
+        listOf(
+            QuickAction("Tambah Aset", Icons.Default.AddCircle, { showAddAssetDialog = true }),
+            QuickAction("Hapus Asset", Icons.Default.RemoveCircle, { 
+                viewModel.removeLastAsset()
+            }),
+            QuickAction("Laporan", Icons.Default.Assessment, { /* Aksi Buat Laporan */ }),
+            QuickAction("Sinkronisasi", Icons.Default.Sync, { /* Aksi Sinkronisasi Data */ }),
+        )
+    }
+
+    if (showAddAssetDialog) {
+        AddAssetDialog(
+            onDismiss = { showAddAssetDialog = false },
+            onAddAsset = { ticker, name, marketValue, quantity, category ->
+                // Mapping kategori ke icon sederhana
+                val iconResId = when(category) {
+                    "Crypto" -> R.drawable.bitcoin_logo
+                    "Saham" -> R.drawable.bbca_logo
+                    else -> R.drawable.rupiah_logo
+                }
+                viewModel.addAsset(ticker, name, marketValue, quantity, category, iconResId)
+                showAddAssetDialog = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = { /* Tidak ada TopAppBar */ },
@@ -86,41 +101,14 @@ fun HomeScreen(navController: NavController) {
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp),
-            // MENGURANGI JARAK ANTAR ITEM LAZYCOLUMN
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // --- ITEM 1: HEADER KUSTOM ---
-            item {
-                CustomHomeHeader(navController, "M. Kaspul Anwar")
-            }
-
-            // --- ITEM 2: BALANCE CARD MODERN ---
-            item {
-                BalanceCard(
-                    totalValue = "Rp 4.250.000",
-                    isHidden = balanceHidden,
-                    onToggleClick = { balanceHidden = !balanceHidden }
-                )
-            }
-
-            // --- ITEM 3: QUICK ACTIONS ---
-            item {
-                QuickActionsRow(actions = portfolioActions)
-            }
-
-            // --- ITEM 4: Judul Daftar Aset (Revisi Judul) ---
-            item {
-                // Menghapus Spacer di sini agar lebih rapat
-                Text(
-                    text = "Daftar Aset Saya", // Judul diperbaiki
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-            }
-
-            // --- ITEM 5: Daftar Aset Portofolio ---
-            items(dummyAssets) { asset ->
+            item { CustomHomeHeader(navController, "M. Kaspul Anwar") }
+            item { BalanceCard(totalValue = totalPortfolioValue, isHidden = balanceHidden, onToggleClick = { balanceHidden = !balanceHidden }) }
+            item { QuickActionsRow(actions = portfolioActions) }
+            item { Text("Daftar Aset Saya", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), modifier = Modifier.padding(vertical = 4.dp)) }
+            items(assets) { asset ->
                 PortfolioItem(
                     icon = {
                         Image(
@@ -134,15 +122,114 @@ fun HomeScreen(navController: NavController) {
                     marketValue = asset.marketValue,
                     quantity = asset.quantity
                 )
-                // Divider Dihapus (Sesuai permintaan)
             }
         }
     }
 }
 
-// ----------------------------------------------------
-// 3. KOMPONEN HOMESCREEN (MODIFIKASI BALANCE CARD)
-// ----------------------------------------------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddAssetDialog(
+    onDismiss: () -> Unit,
+    onAddAsset: (ticker: String, name: String, marketValue: String, quantity: String, category: String) -> Unit
+) {
+    var category by remember { mutableStateOf("Crypto") } // Default selection
+    var expanded by remember { mutableStateOf(false) }
+    val categories = listOf("Crypto", "Saham", "Kas")
+
+    var ticker by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var marketValue by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Tambah Aset Baru") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                
+                // --- DROPDOWN KATEGORI ---
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Kategori Aset") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        categories.forEach { item ->
+                            DropdownMenuItem(
+                                text = { Text(text = item) },
+                                onClick = {
+                                    category = item
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = ticker,
+                    onValueChange = { ticker = it },
+                    label = { Text("Ticker (misal: ETH)") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nama Aset") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = marketValue,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) marketValue = it },
+                    label = { Text("Nilai Pasar (Angka: 100000)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { quantity = it },
+                    label = { 
+                        // Label dinamis berdasarkan kategori
+                        val unitLabel = when(category) {
+                            "Crypto" -> "0.005"
+                            "Saham" -> "100 (Lembar)"
+                            "Kas" -> "1000000 (Rp)"
+                            else -> "Jumlah"
+                        }
+                        Text("Jumlah ($unitLabel)") 
+                    },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (ticker.isNotEmpty() && name.isNotEmpty() && marketValue.isNotEmpty()) {
+                    onAddAsset(ticker, name, marketValue, quantity, category)
+                }
+            }) {
+                Text("Simpan")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Batal")
+            }
+        }
+    )
+}
 
 @Composable
 fun CustomHomeHeader(navController: NavController, userName: String) {
@@ -165,12 +252,10 @@ fun CustomHomeHeader(navController: NavController, userName: String) {
             )
         }
 
-        // Ikon Notifikasi
         IconButton(onClick = { /* Aksi Notifikasi */ }) {
             Icon(Icons.Default.Notifications, contentDescription = "Notifikasi")
         }
 
-        // Ikon Profil (Dipertahankan di Header)
         IconButton(onClick = { navController.navigate(Destinations.PROFILE_ROUTE) }) {
             Icon(Icons.Default.Person, contentDescription = "Profil", tint = MaterialTheme.colorScheme.primary)
         }
@@ -218,14 +303,14 @@ fun BalanceCard(totalValue: String, isHidden: Boolean, onToggleClick: () -> Unit
             Spacer(Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Aksi Riwayat Transaksi */ }, // Komentar diperbarui
+                onClick = { /* Aksi Riwayat Transaksi */ },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Riwayat Transaksi") // TEKS TELAH DIMODIFIKASI
+                Text("Riwayat Transaksi")
             }
         }
     }
@@ -276,7 +361,7 @@ fun QuickActionButton(action: QuickAction) {
 }
 
 // ----------------------------------------------------
-// 4. Bottom Navigation Bar Component (Dibiarkan)
+// 4. Bottom Navigation Bar Component
 // ----------------------------------------------------
 
 private data class BottomNavItem(
@@ -285,10 +370,8 @@ private data class BottomNavItem(
     val label: String
 )
 
-// Menghapus Destinations.PROFILE_ROUTE dari daftar item navigasi
 private val bottomNavItems = listOf(
     BottomNavItem(Destinations.HOME_ROUTE, Icons.Default.Home, "Home"),
-    // PROFILE_ROUTE Dihapus
     BottomNavItem(Destinations.SETTINGS_ROUTE, Icons.Default.Settings, "Settings"),
 )
 
