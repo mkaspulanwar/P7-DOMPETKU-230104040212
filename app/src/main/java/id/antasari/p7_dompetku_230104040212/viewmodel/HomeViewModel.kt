@@ -1,17 +1,24 @@
 package id.antasari.p7_dompetku_230104040212.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import id.antasari.p7_dompetku_230104040212.data.local.AssetPreferences
 import id.antasari.p7_dompetku_230104040212.model.Asset
-import id.antasari.p7_dompetku_230104040212.model.dummyAssets
 import java.text.NumberFormat
 import java.util.Locale
 
-class HomeViewModel : ViewModel() {
-    private val _assets = mutableStateListOf<Asset>().apply { addAll(dummyAssets) }
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val assetPrefs = AssetPreferences(application)
+    
+    // 1. Init _assets dengan data dari storage, bukan dummy
+    private val _assets = mutableStateListOf<Asset>().apply {
+        addAll(assetPrefs.getAssets())
+    }
+    
     val assets: List<Asset> get() = _assets
 
-    // Helper untuk format Rupiah sesuai PUEBI (Rp10.000,00)
     private fun formatRupiah(amount: Double): String {
         val currencyFormat = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
         currencyFormat.minimumFractionDigits = 2
@@ -30,29 +37,26 @@ class HomeViewModel : ViewModel() {
             return formatRupiah(total)
         }
 
-    // Fungsi tambah asset yang diperbarui dengan parameter kategori
     fun addAsset(
         ticker: String, 
         name: String, 
         marketValueRaw: String, 
         quantityRaw: String, 
-        category: String, // Parameter baru
+        category: String, 
         iconResId: Int
     ) {
-        // 1. Format Market Value (Rp)
         val marketValueDouble = marketValueRaw.replace(",", ".").toDoubleOrNull() ?: 0.0
         val formattedMarketValue = formatRupiah(marketValueDouble)
 
-        // 2. Format Quantity berdasarkan Kategori
         val formattedQuantity = if (quantityRaw.all { it.isDigit() || it == '.' || it == ',' }) {
             when (category) {
-                "Crypto" -> "$quantityRaw $ticker"  // Contoh: "0.05 BTC"
-                "Saham" -> "$quantityRaw Lembar"   // Contoh: "100 Lembar"
-                "Kas" -> formatRupiah(quantityRaw.replace(",", ".").toDoubleOrNull() ?: 0.0) // Contoh: "Rp1.000.000,00"
+                "Crypto" -> "$quantityRaw $ticker"
+                "Saham" -> "$quantityRaw Lembar"
+                "Kas" -> formatRupiah(quantityRaw.replace(",", ".").toDoubleOrNull() ?: 0.0)
                 else -> "$quantityRaw Unit"
             }
         } else {
-            quantityRaw // Jika user sudah mengetik manual lengkap
+            quantityRaw
         }
 
         val newAsset = Asset(
@@ -65,11 +69,22 @@ class HomeViewModel : ViewModel() {
         )
         
         _assets.add(0, newAsset)
+        
+        // 2. Simpan perubahan ke storage setiap kali add
+        saveAssetsToStorage()
     }
 
     fun removeLastAsset() {
         if (_assets.isNotEmpty()) {
             _assets.removeLast()
+            // 3. Simpan perubahan ke storage setiap kali hapus
+            saveAssetsToStorage()
         }
+    }
+
+    // Fungsi helper untuk menyimpan list saat ini ke Prefs
+    private fun saveAssetsToStorage() {
+        // Kita perlu mengirimkan List biasa (bukan MutableStateList) ke helper
+        assetPrefs.saveAssets(_assets.toList())
     }
 }
